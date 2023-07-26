@@ -1,2 +1,3 @@
 # webchat-with-ws
-online chat
+npm install ws
+
