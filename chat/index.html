@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>WebSocket Chat</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div>
+    <h1>Chat</h1>
+    <input type="text" id="usernameInput" placeholder="Enter your username">
+    <input type="text" id="messageInput" placeholder="Type your message">
+    <button onclick="sendMessage()">Send</button>
+  </div>
+  <div id="chatMessages"></div>
+
+  <script>
+    const serverHost = "localhost"; // Replace with your WebSocket server host
+    const serverPort = "8080"; // Replace with your WebSocket server port
+
+    const chatMessages = document.getElementById("chatMessages");
+    const usernameInput = document.getElementById("usernameInput");
+    const messageInput = document.getElementById("messageInput");
+    const webSocketUrl = `ws://${serverHost}:${serverPort}`;
+
+    const ws = new WebSocket(webSocketUrl);
+
+    // Restore chat messages from localStorage (if available) on page load
+    const storedMessages = JSON.parse(localStorage.getItem("chatMessages"));
+    if (storedMessages) {
+      storedMessages.forEach((message) => appendMessageToChat(message));
+    }
+
+    ws.onopen = () => {
+      console.log("WebSocket connection opened.");
+    };
+
+    ws.onmessage = (event) => {
+      const message = JSON.parse(event.data);
+      appendMessageToChat(message);
+      saveMessagesToLocalStorage(); // Save updated messages to localStorage
+    };
+
+    ws.onclose = (event) => {
+      console.log("WebSocket connection closed with code:", event.code, "reason:", event.reason);
+    };
+
+    ws.onerror = (error) => {
+      console.error("WebSocket error:", error);
+    };
+
+    function appendMessageToChat(message) {
+      const messageElement = document.createElement("div");
+      messageElement.textContent = message.sender + ": " + message.content;
+      chatMessages.appendChild(messageElement);
+    }
+
+    function saveMessagesToLocalStorage() {
+      const messages = Array.from(chatMessages.children).map((element) => {
+        const [sender, content] = element.textContent.split(": ");
+        return { sender, content };
+      });
+      localStorage.setItem("chatMessages", JSON.stringify(messages));
+    }
+
+    function sendMessage() {
+      const username = usernameInput.value.trim();
+      const messageText = messageInput.value.trim();
+      if (username === "" || messageText === "") {
+        return;
+      }
+
+      const message = { sender: username, content: messageText };
+      ws.send(JSON.stringify(message));
+      messageInput.value = "";
+    }
+
+    messageInput.addEventListener("keyup", (event) => {
+      if (event.key === "Enter") {
+        sendMessage();
+      }
+    });
+  </script>
+</body>
+</html>
