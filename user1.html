@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>WebSocket Chat - Client 1</title>
+</head>
+<body>
+  <div>
+    <h1>Client 1</h1>
+    <input type="text" id="messageInput" placeholder="Type your message">
+    <button onclick="sendMessage()">Send</button>
+  </div>
+  <div id="chatMessages"></div>
+
+  <script>
+    const serverHost = "localhost"; // Replace with your WebSocket server host
+    const serverPort = "8080"; // Replace with your WebSocket server port
+
+    const chatMessages = document.getElementById("chatMessages");
+    const messageInput = document.getElementById("messageInput");
+    const webSocketUrl = `ws://${serverHost}:${serverPort}`;
+
+    const ws = new WebSocket(webSocketUrl);
+
+    ws.onmessage = (event) => {
+      const message = event.data;
+      const messageElement = document.createElement("div");
+      messageElement.textContent = message;
+      chatMessages.appendChild(messageElement);
+    };
+
+    function sendMessage() {
+      if (ws.readyState === WebSocket.OPEN) {
+        const messageText = messageInput.value.trim();
+        if (messageText !== "") {
+          ws.send(messageText); // Send text-based message
+          messageInput.value = "";
+        }
+      } else {
+        console.log("WebSocket is not open. Cannot send data.");
+      }
+    }
+
+    messageInput.addEventListener("keyup", (event) => {
+      if (event.key === "Enter") {
+        sendMessage();
+      }
+    });
+  </script>
+</body>
+</html>
